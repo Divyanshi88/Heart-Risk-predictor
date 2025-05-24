@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Risk Prediction</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-heart-pulse-fill me-2"></i>
+                Heart Risk Predictor
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-house-door me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard"><i class="bi bi-graph-up me-1"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about"><i class="bi bi-people me-1"></i> About Us</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="container-fluid py-5 bg-gradient-primary text-white mb-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 animate-left-trigger">
+                    <h1 class="display-4 fw-bold mb-4">Heart Risk Prediction</h1>
+                    <p class="lead mb-4">Our advanced machine learning model helps predict your risk of heart disease based on key health parameters.</p>
+                    <p class="mb-0">
+                        <i class="bi bi-check-circle-fill me-2"></i> Accurate predictions
+                        <i class="bi bi-check-circle-fill ms-4 me-2"></i> Easy to use
+                        <i class="bi bi-check-circle-fill ms-4 me-2"></i> Instant results
+                    </p>
+                </div>
+                <div class="col-lg-6 text-center animate-right-trigger">
+                    <img src="{{ url_for('static', filename='images/hearth.png') }}" 
+                        alt="Heart Health" 
+                        class="img-fluid float-element" 
+                        style="max-height: 300px;">
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card shadow-sm animate-in">
+                    <div class="card-header">
+                        <h3 class="mb-0"><i class="bi bi-clipboard-data me-2"></i>Heart Risk Prediction Form</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" class="needs-validation" novalidate>
+                            <div class="row">
+                                {% if input_data %}
+                                    {% for feature in input_data.keys() %}
+                                        <div class="col-md-6 mb-4">
+                                            <label for="{{ feature }}" class="form-label">
+                                                {{ feature.capitalize() }}
+                                                <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" 
+                                                   title="{{ feature_descriptions[feature] }}"></i>
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-123"></i></span>
+                                                <input type="number" step="any" class="form-control" id="{{ feature }}" 
+                                                       name="{{ feature }}" value="{{ input_data[feature] }}" required>
+                                                <div class="invalid-feedback">
+                                                    Please provide a valid value.
+                                                </div>
+                                            </div>
+                                            <small class="form-text">{{ feature_descriptions[feature] }}</small>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    {% for feature in feature_names %}
+                                        <div class="col-md-6 mb-4">
+                                            <label for="{{ feature }}" class="form-label">
+                                                {{ feature.capitalize() }}
+                                                <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" 
+                                                   title="{{ feature_descriptions[feature] }}"></i>
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-123"></i></span>
+                                                <input type="number" step="any" class="form-control" id="{{ feature }}" 
+                                                       name="{{ feature }}" required>
+                                                <div class="invalid-feedback">
+                                                    Please provide a valid value.
+                                                </div>
+                                            </div>
+                                            <small class="form-text">{{ feature_descriptions[feature] }}</small>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-heart-pulse me-2"></i>Predict Heart Risk
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                {% if prediction is not none %}
+                <div class="card shadow-sm glass-card">
+                    <div class="card-header">
+                        <h3 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Prediction Results</h3>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="result-container py-4">
+                            <h4 class="text-gradient">Heart Risk Assessment</h4>
+                            <div class="risk-indicator my-4 {% if prediction == 1 %}high-risk{% else %}low-risk{% endif %} animate-pulse">
+                                <h1 class="display-4">{{ 'High Risk' if prediction == 1 else 'Low Risk' }}</h1>
+                                <i class="bi {% if prediction == 1 %}bi-exclamation-triangle-fill{% else %}bi-shield-check{% endif %} fs-1"></i>
+                            </div>
+                            <div class="risk-details">
+                                <div class="row mb-3">
+                                    <div class="col-md-4 text-md-end">
+                                        <strong>Risk Level:</strong>
+                                    </div>
+                                    <div class="col-md-8 text-md-start">
+                                        <span class="badge {% if risk_level == 'Low' %}bg-success{% elif risk_level == 'Moderate' %}bg-warning{% else %}bg-danger{% endif %} p-2">
+                                            <i class="bi {% if risk_level == 'Low' %}bi-heart{% elif risk_level == 'Moderate' %}bi-heart-half{% else %}bi-heart-fill{% endif %} me-1"></i>
+                                            {{ risk_level }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4 text-md-end">
+                                        <strong>Probability:</strong>
+                                    </div>
+                                    <div class="col-md-8 text-md-start">
+                                        {{ probability * 100 }}%
+                                    </div>
+                                </div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar {% if probability < 0.3 %}bg-success{% elif probability < 0.7 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                        role="progressbar" style="width: 0%" 
+                                         aria-valuenow="{{ probability * 100 }}" aria-valuemin="0" aria-valuemax="100">
+                                        {{ probability * 100 }}%
+                                    </div>
+                                </div>
+                                <script>
+                                    // Animate progress bar on load
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        setTimeout(function() {
+                                            document.querySelector('.progress-bar').style.width = '{{ probability * 100 }}%';
+                                        }, 300);
+                                    });
+                                </script>
+                            </div>
+                            <div class="mt-4 card glass-card p-3">
+                                <h5 class="text-gradient mb-3">What does this mean?</h5>
+                                <p class="mb-0">
+                                    {% if prediction == 1 %}
+                                    Your results indicate a <strong>higher risk</strong> of heart disease based on the provided parameters. 
+                                    This is not a diagnosis, but a screening tool that suggests you may benefit from consulting with a healthcare professional.
+                                    {% else %}
+                                    Your results indicate a <strong>lower risk</strong> of heart disease based on the provided parameters.
+                                    Continue maintaining a healthy lifestyle and regular check-ups with your healthcare provider.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="alert alert-info mb-0">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="bi bi-info-circle-fill fs-3"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading">Medical Disclaimer</h5>
+                                    <p class="mb-0">This prediction is based on the input parameters you provided and should be used for informational purposes only. Always consult with a healthcare professional for medical advice and proper diagnosis.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card shadow-sm h-100 animate-in">
+                    <div class="card-header">
+                        <h3 class="mb-0"><i class="bi bi-info-circle me-2"></i>How It Works</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <img src="{{ url_for('static', filename='images/heart.png') }}" alt="Heart Diagram" class="img-fluid mb-3" style="max-height: 200px;">
+                            <h4 class="text-gradient">Advanced Heart Risk Prediction</h4>
+                        </div>
+                        
+                        <div class="steps-container">
+                            <div class="step d-flex mb-4 animate-in">
+                                <div class="step-icon me-3">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-1-circle-fill fs-4"></i>
+                                    </div>
+                                </div>
+                                <div class="step-content">
+                                    <h5>Enter Your Health Parameters</h5>
+                                    <p class="text-muted">Fill in your health metrics in the form. These include age, cholesterol levels, blood pressure, and other key indicators.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="step d-flex mb-4 animate-in">
+                                <div class="step-icon me-3">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-2-circle-fill fs-4"></i>
+                                    </div>
+                                </div>
+                                <div class="step-content">
+                                    <h5>AI-Powered Analysis</h5>
+                                    <p class="text-muted">Our machine learning model analyzes your data using patterns learned from thousands of clinical cases.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="step d-flex animate-in">
+                                <div class="step-icon me-3">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-3-circle-fill fs-4"></i>
+                                    </div>
+                                </div>
+                                <div class="step-content">
+                                    <h5>Get Your Risk Assessment</h5>
+                                    <p class="text-muted">Receive an instant evaluation of your heart disease risk level with detailed probability metrics.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="alert alert-primary mb-0">
+                            <i class="bi bi-shield-check me-2"></i>
+                            Your data is processed securely and is not stored after your session ends.
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Features Section -->
+        <div class="row mt-5 mb-5">
+            <div class="col-12 text-center mb-4">
+                <h2 class="display-5 fw-bold">Why Use Our Heart Risk Predictor?</h2>
+                <p class="lead">Our tool combines medical expertise with advanced machine learning</p>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-hover animate-in">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-primary text-white rounded-circle mx-auto mb-4">
+                            <i class="bi bi-graph-up fs-2"></i>
+                        </div>
+                        <h4>High Accuracy</h4>
+                        <p class="text-muted">Our model achieves over 85% accuracy in predicting heart disease risk based on clinical parameters.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-hover animate-in">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-primary text-white rounded-circle mx-auto mb-4">
+                            <i class="bi bi-shield-lock fs-2"></i>
+                        </div>
+                        <h4>Privacy Focused</h4>
+                        <p class="text-muted">Your health data is processed securely and never stored permanently on our servers.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-hover animate-in">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon bg-primary text-white rounded-circle mx-auto mb-4">
+                            <i class="bi bi-lightning fs-2"></i>
+                        </div>
+                        <h4>Instant Results</h4>
+                        <p class="text-muted">Get your heart risk assessment immediately after submitting your health parameters.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="container-fluid py-5 bg-gradient-primary text-white">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h2 class="display-5 fw-bold mb-4">Ready to check your heart health?</h2>
+                    <p class="lead mb-4">Early detection is key to preventing heart disease. Use our tool to get a quick assessment of your risk factors.</p>
+                    <a href="#top" class="btn btn-light btn-lg px-5 shadow-hover">
+                        <i class="bi bi-arrow-up-circle me-2"></i>Back to Top
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-white text-center py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0 text-md-start">
+                    <h5>Heart Risk Predictor</h5>
+                    <p class="small mb-0">An advanced machine learning tool for heart disease risk assessment.</p>
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="text-white text-decoration-none">Home</a></li>
+                        <li><a href="/dashboard" class="text-white text-decoration-none">Dashboard</a></li>
+                        <li><a href="/about" class="text-white text-decoration-none">About Us</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <h5>Contact</h5>
+                    <p class="small mb-0">
+                        <i class="bi bi-github me-2"></i>https://github.com/Divyanshi88/Heart-Risk-predictor
+                    </p>
+                </div>
+            </div>
+            <hr class="my-4" style="background-color: rgba(255,255,255,0.2);">
+            <p class="mb-0">© 2024 Heart Risk Prediction System | Developed by Divyanshi Sharma & Yashswi Shukla</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <style>
+        /* Feature icon styling */
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover .feature-icon {
+            transform: scale(1.1);
+        }
+        
+        /* Risk indicator styling */
+        .risk-indicator {
+            padding: 2rem;
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .high-risk {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger);
+        }
+        
+        .low-risk {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: var(--success);
+        }
+        
+        /* Animate pulse effect */
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</body>
+</html>

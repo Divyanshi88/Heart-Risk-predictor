@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../Downloads/heart+disease"
+		}
+	],
+	"settings": {
+		"zencoder.enableRepoIndexing": true,
+		"liveServer.settings.multiRootWorkspaceName": "healthcare"
+	}
+}
