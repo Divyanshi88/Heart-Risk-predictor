@@ -15,17 +15,15 @@ import seaborn as sns
 
 app = Flask(__name__)
 
-# Load the saved model
-model_path = '/Users/divayanshisharama/Desktop/healthcare/heart_risk_ensemble_model.joblib'
+# Load model
+model_path = os.path.join(os.path.dirname(__file__), 'heart_risk_ensemble_model.joblib')
 model = joblib.load(model_path)
 
-# Define your input feature names here (based on what the model expects)
 feature_names = [
     'age', 'sex', 'cp', 'trestbps', 'restecg', 'thalach', 
     'exang', 'oldpeak', 'slope', 'ca', 'thal'
 ]
 
-# Feature descriptions for better user understanding
 feature_descriptions = {
     'age': 'Age in years',
     'sex': 'Gender (0 = female, 1 = male)',
@@ -40,7 +38,6 @@ feature_descriptions = {
     'thal': 'Thalassemia (0 = normal, 1 = fixed defect, 2 = reversible defect)'
 }
 
-# Mock model performance metrics (replace with actual metrics if available)
 model_metrics = {
     'accuracy': 0.87,
     'precision': 0.85,
@@ -49,7 +46,6 @@ model_metrics = {
     'auc': 0.91
 }
 
-# Confusion matrix data (replace with actual data if available)
 confusion_matrix = np.array([[67, 13], [8, 62]])
 
 @app.route('/', methods=['GET', 'POST'])
@@ -60,24 +56,20 @@ def index():
     risk_level = None
     
     if request.method == 'POST':
-        # Extract input features from form, convert to float
         input_data = []
         for feature in feature_names:
             val = request.form.get(feature)
             try:
                 val = float(val)
             except:
-                val = 0.0  # fallback or you can return error
+                val = 0.0
             input_data.append(val)
 
-        # Prepare data for prediction (reshape for 1 sample)
         input_array = np.array(input_data).reshape(1, -1)
 
-        # Predict probability and class
         pred_prob = model.predict_proba(input_array)[0][1]
         pred_class = model.predict(input_array)[0]
         
-        # Determine risk level
         if pred_prob < 0.3:
             risk_level = "Low"
         elif pred_prob < 0.7:
@@ -103,7 +95,6 @@ def about():
 
 @app.route('/dashboard')
 def dashboard():
-    # Generate plots for the dashboard
     plots = generate_dashboard_plots()
     return render_template('dashboard.html', 
                           plots=plots,
@@ -112,7 +103,6 @@ def dashboard():
 def generate_dashboard_plots():
     plots = {}
     
-    # Confusion Matrix Heatmap
     plt.figure(figsize=(8, 6))
     sns.heatmap(confusion_matrix, annot=True, fmt='d', cmap='Blues', 
                 xticklabels=['Negative (0)', 'Positive (1)'],
@@ -122,7 +112,6 @@ def generate_dashboard_plots():
     plt.title('Confusion Matrix')
     plots['confusion_matrix'] = get_image_base64()
     
-    # Model Metrics Bar Chart
     plt.figure(figsize=(10, 6))
     metrics = list(model_metrics.keys())
     values = list(model_metrics.values())
@@ -134,7 +123,6 @@ def generate_dashboard_plots():
         plt.text(i, v + 0.02, f'{v:.2f}', ha='center')
     plots['metrics_bar'] = get_image_base64()
     
-    # Feature Importance (mock data - replace with actual if available)
     plt.figure(figsize=(12, 6))
     importance = np.random.rand(len(feature_names))
     sorted_idx = np.argsort(importance)
@@ -146,7 +134,6 @@ def generate_dashboard_plots():
     return plots
 
 def get_image_base64():
-    """Convert matplotlib plot to base64 string for embedding in HTML"""
     buffer = BytesIO()
     plt.savefig(buffer, format='png', bbox_inches='tight')
     buffer.seek(0)
@@ -158,4 +145,6 @@ def get_image_base64():
     return f"data:image/png;base64,{encoded}"
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    # Use PORT from environment variable for deployment
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
